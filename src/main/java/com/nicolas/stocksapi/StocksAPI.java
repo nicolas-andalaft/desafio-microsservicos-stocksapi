@@ -11,12 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@CrossOrigin
 class StocksAPI {
 	private final String databaseUrl = "localhost:5432";
 	private final String databaseName = "stocks_db";
@@ -24,9 +22,10 @@ class StocksAPI {
 	private final String password = "postgres";
 
 	@GetMapping("/stocks")
-	public List<Map<String, ?>> getStocks() {
-		Connection conn = connect();
+	public String getStocks() {
 		List<Map<String, ?>> result = null;
+		Connection conn = connect();
+		if (conn == null) return "Server connection error";
 
 		try {
 			Statement statement = conn.createStatement();
@@ -41,7 +40,7 @@ class StocksAPI {
 			conn.close();
 		} catch(Exception e) {}
 
-		return result;
+		return result.toString();
 	}
 
 	public Connection connect() {
@@ -51,7 +50,7 @@ class StocksAPI {
 			System.out.println("Connected to the PostgreSQL server successfully.");
 			
 		} catch (SQLException e) {
-			System.out.println("SQLEXCEPTION: " + e.getMessage());
+			System.out.println(e.getMessage());
 		}
 
 		return conn;
