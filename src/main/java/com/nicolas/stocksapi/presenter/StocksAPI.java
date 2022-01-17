@@ -1,6 +1,9 @@
 package com.nicolas.stocksapi.presenter;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.nicolas.stocksapi.core.NoParams;
+import com.nicolas.stocksapi.data.mappers.StockMapper;
 import com.nicolas.stocksapi.data.repositories.StocksRepositoryImplementation;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.StocksRepository;
@@ -31,7 +34,13 @@ class StocksAPI {
 		Either<Exception, StockEntity[]> result = getStocksUsecase.call(new NoParams());
 		if (result.isLeft()) 
 			return new Object[]{result.getLeft().toString()};
-		else
-			return result.get();
+		else {
+			List<Object> mapList = new ArrayList<Object>();
+			for (StockEntity stock : result.get()) {
+				mapList.add(StockMapper.toMap(stock));
+			}
+
+			return mapList.toArray();
+		}
 	}
 }
