@@ -23,6 +23,9 @@ class StocksAPI {
 		getStocksUsecase = new GetStocksUsecase(stocksRepository);
 	}
 
+	@GetMapping("/")
+	public void root() {}
+
 	@GetMapping("/stocks")
 	public Object[] stocks() {
 		Either<Exception, StockEntity[]> result = getStocksUsecase.call(new NoParams());
