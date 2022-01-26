@@ -20,9 +20,7 @@ public class StocksapiApplication {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.cors().and()
-                    .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-                    .oauth2ResourceServer().jwt();
+            http.csrf().disable().cors();
         }
     }
 }
