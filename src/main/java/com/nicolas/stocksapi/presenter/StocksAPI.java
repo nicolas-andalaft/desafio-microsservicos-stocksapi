@@ -79,15 +79,15 @@ class StocksAPI {
 			return returnOk(result);
 	}
 
-	public ResponseEntity<?> returnServerError(Either<?,?> result) {
+	private ResponseEntity<?> returnServerError(Either<?,?> result) {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result.getLeft());
 	}
 
-	public ResponseEntity<?> returnBadRequest(Either<?,?> result) {
+	private ResponseEntity<?> returnBadRequest(Either<?,?> result) {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getLeft());
 	}
 
-	public ResponseEntity<?> returnOk(Either<?,?> result) {
+	private ResponseEntity<?> returnOk(Either<?,?> result) {
 		return ResponseEntity.status(HttpStatus.OK).body(result.get());
 	}
 }
