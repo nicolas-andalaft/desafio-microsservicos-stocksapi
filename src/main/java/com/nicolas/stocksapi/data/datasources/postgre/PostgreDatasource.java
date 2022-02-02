@@ -1,5 +1,6 @@
 package com.nicolas.stocksapi.data.datasources.postgre;
 
+import java.sql.Connection;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -39,10 +40,11 @@ public abstract class PostgreDatasource {
 
 	protected Either<Exception, List<Map<String, Object>>> execute(String sqlString) {
         Either<Exception, List<Map<String, Object>>> result;
+		Connection conn = null;
         
 		try {
 			var datasource = dataSource();
-			var conn = datasource.getConnection();
+			conn = datasource.getConnection();
 			var statement = conn.createStatement();
 			var rs = statement.executeQuery(sqlString);
 			var response = ResultConverter.toMapList(rs);
@@ -51,6 +53,11 @@ public abstract class PostgreDatasource {
 		} catch (Exception e) {
 			result = Either.left(e);
 		}
+
+		try {
+			conn.close();
+		} 
+		catch (Exception e) {}
 
 		return result;
 	}
