@@ -1,80 +1,56 @@
 package com.nicolas.stocksapi.data.datasources.postgre;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import com.nicolas.stocksapi.data.utils.ResultConverter;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import io.vavr.collection.List;
 import io.vavr.control.Either;
 
+@Configuration
 public abstract class PostgreDatasource {
-    protected String databaseUrl;
-	protected String databaseName;
-	protected String username;
-	protected String password;
+	private DataSource _datasource;
 	protected String tableName;
 
-    protected Either<Exception, Connection> connect() {
-		Connection conn = null;
-		try {
-			conn = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", databaseUrl, databaseName), username, password);
-			return Either.right(conn);
-
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-			return Either.left(e);
-		}
+	protected PostgreDatasource(String tableName) {
+		this.tableName = tableName;
 	}
 
-	protected Either<Exception, List<Map<String, Object>>> executeQuery(String sqlString) {
-		var tryConnect = connect();
-        if (tryConnect.isLeft()) return Either.left(tryConnect.getLeft());
+	@Bean
+	public DataSource dataSource() {
+		if (_datasource != null)
+			return _datasource;
 
-		var conn = tryConnect.get();
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+		dataSource.setUrl("jdbc:postgresql://localhost:5432/stocks_db");
+		dataSource.setUsername("postgres");
+		dataSource.setPassword("postgres");
+		_datasource = dataSource;
+
+		return _datasource;
+	}
+
+	protected Either<Exception, List<Map<String, Object>>> execute(String sqlString) {
         Either<Exception, List<Map<String, Object>>> result;
         
 		try {
-			Statement statement = conn.createStatement();
+			var datasource = dataSource();
+			var conn = datasource.getConnection();
+			var statement = conn.createStatement();
 			var rs = statement.executeQuery(sqlString);
-	
-            var response = ResultConverter.toMapList(rs);
+			var response = ResultConverter.toMapList(rs);
 			result = Either.right(response);
 
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			result = Either.left(e);
 		}
-
-		try {
-			conn.close();
-		} catch(Exception e) {}
-
-		return result;
-	}
-
-	protected Either<Exception, Integer> executeUpdate(String sqlString) {
-		var tryConnect = connect();
-        if (tryConnect.isLeft()) return Either.left(tryConnect.getLeft());
-
-		var conn = tryConnect.get();
-        Either<Exception, Integer> result;
-        
-		try {
-			Statement statement = conn.createStatement();
-			var affected = statement.executeUpdate(sqlString);
-			
-			result = Either.right(affected);
-
-		} catch (SQLException e) {
-			result = Either.left(e);
-		}
-
-		try {
-			conn.close();
-		} catch(Exception e) {}
 
 		return result;
 	}
