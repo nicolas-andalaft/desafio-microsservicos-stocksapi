@@ -26,5 +26,10 @@ public class StocksRepository implements IStocksRepository {
 	public Either<Exception, StockEntity> getStock(StockEntity stock) {
 		return datasource.getStock(new StockModel(stock)).map((e) -> (StockEntity)e);
 	}
+
+	@Override
+	public Either<Exception, List<StockEntity>> getRandomStocks(int qty) {
+		return datasource.getRandomStocks(qty);
+	}
     
 }

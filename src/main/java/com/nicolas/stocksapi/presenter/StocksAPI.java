@@ -6,6 +6,7 @@ import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksDataSource;
 import com.nicolas.stocksapi.data.repositories.StocksRepository;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
+import com.nicolas.stocksapi.domain.usecases.GetRandomStocksUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStockUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStocksListUsecase;
 
@@ -30,6 +31,7 @@ class StocksAPI {
 	// Usecases
 	private GetStocksListUsecase getStocksListUsecase;
 	private GetStockUsecase getStockUsecase;
+	private GetRandomStocksUsecase getRandomStocksUsecase;
 
 	private NoParams noParams;
 	
@@ -40,18 +42,22 @@ class StocksAPI {
 
 		getStocksListUsecase = new GetStocksListUsecase(stocksRepository);
 		getStockUsecase = new GetStockUsecase(stocksRepository);
+		getRandomStocksUsecase = new GetRandomStocksUsecase(stocksRepository);
 
 		noParams = new NoParams();
 	}
+
+	private final String getStocksList = "/stocks{id}";
+	private final String getRandomStocks = "/stocks/random/{qty}";
 	
 	@GetMapping("/")
-	public void root() {}
+	public String root() { return "StocksAPI"; }
 
 	@GetMapping("/error")
-	public void error() {}
+	public String error() { return "Endpoint doesn't exist"; }
 	
 	@GetMapping("/stocks")
-	public ResponseEntity<?> stocks() {
+	public ResponseEntity<?> getStocksList() {
 		var result = getStocksListUsecase.call(noParams);
 
 		if (result.isLeft()) 
@@ -60,18 +66,35 @@ class StocksAPI {
 			return returnOk(result);
 	}
 
-	@GetMapping("/stocks/{id}")
-	public ResponseEntity<?> stockId(@PathVariable String id) {		
+	@GetMapping(getStocksList)
+	public ResponseEntity<?> getStockById(@PathVariable String id) {		
 		Long id_stock;
 		try {
 			id_stock = Long.parseLong(id);
 		} catch (Exception e) {
-			return returnBadRequest(Either.left(e));
+			return returnBadRequest(Either.left("Parameter in wrong format"));
 		}
 
 		var stock = new StockEntity();
 		stock.id = id_stock;
 		var result = getStockUsecase.call(stock);
+
+		if (result.isLeft()) 
+			return returnServerError(result);
+		else
+			return returnOk(result);
+	}
+
+	@GetMapping(getRandomStocks)
+	public ResponseEntity<?> getRandomStocks(@PathVariable String qty) {		
+		int stocksQty;
+		try {
+			stocksQty = Integer.parseInt(qty);
+		} catch (Exception e) {
+			return returnBadRequest(Either.left("Parameter in wrong format"));
+		}
+
+		var result = getRandomStocksUsecase.call(stocksQty);
 
 		if (result.isLeft()) 
 			return returnServerError(result);
