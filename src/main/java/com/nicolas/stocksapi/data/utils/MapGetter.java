@@ -5,6 +5,8 @@ import java.util.Map;
 public class MapGetter<T> {
 
     public static <T> T parse(Map<String, Object> map, String key, Class<T> type) {
+        if (map == null) return null;
+        
         try {
             Object obj = map.get(key);
             T value = type.cast(obj);
