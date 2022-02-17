@@ -53,7 +53,7 @@ class StocksAPI {
 		noParams = new NoParams();
 	}
 
-	private final String getStocksList = "/stocks{id}";
+	private final String getStocksList = "/stocks/{id}";
 	private final String getRandomStocks = "/stocks/random/{qty}";
 	private final String updateBidAsk = "/stocks/{id}/update/{type}/{value}";
 	

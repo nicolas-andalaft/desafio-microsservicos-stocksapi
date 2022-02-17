@@ -16,7 +16,7 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 
 	@Override
     public Either<Exception, List<StockEntity>> getStocksList() {
-        var sqlString = String.format("SELECT * FROM %S", tableName);
+        var sqlString = String.format("SELECT * FROM %S ORDER BY id", tableName);
 
 		return super.execute(sqlString).map((list) -> {
 			return list.map((e) -> StockModel.fromMap(e));
