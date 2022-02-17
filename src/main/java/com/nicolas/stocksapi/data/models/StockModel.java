@@ -1,5 +1,6 @@
 package com.nicolas.stocksapi.data.models;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Map;
 import com.nicolas.stocksapi.data.utils.MapGetter;
@@ -29,10 +30,10 @@ public class StockModel extends StockEntity {
     stock.id = MapGetter.parse(map, "id", Long.class);
     stock.stock_symbol = MapGetter.parse(map, "stock_symbol", String.class);
     stock.stock_name = MapGetter.parse(map, "stock_name", String.class);
-    stock.ask_min = MapGetter.parse(map, "ask_min", Float.class);
-    stock.ask_max = MapGetter.parse(map, "ask_max", Float.class);
-    stock.bid_min = MapGetter.parse(map, "bid_min", Float.class);
-    stock.bid_max = MapGetter.parse(map, "bid_max", Float.class);
+    stock.ask_min = MapGetter.parse(map, "ask_min", BigDecimal.class);
+    stock.ask_max = MapGetter.parse(map, "ask_max", BigDecimal.class);
+    stock.bid_min = MapGetter.parse(map, "bid_min", BigDecimal.class);
+    stock.bid_max = MapGetter.parse(map, "bid_max", BigDecimal.class);
     stock.created_on = MapGetter.parse(map, "created_on", Timestamp.class);
     stock.updated_on = MapGetter.parse(map, "updated_on", Timestamp.class);
     
