@@ -11,6 +11,16 @@ create table stocks(
     updated_on timestamp not null default current_timestamp
 );
 
+create table stocks_history(
+    id_stock bigint references stocks(id),
+    ask_min numeric,
+    ask_max numeric,
+    bid_min numeric,
+    bid_max numeric,
+    created_on timestamp not null default current_timestamp,
+    primary key (id_stock)
+);
+
 create or replace function set_updated_on()
 returns trigger as $$
 BEGIN
@@ -24,6 +34,20 @@ before update
 on stocks
 for each row 
 execute procedure set_updated_on();
+
+create or replace function save_history()
+returns trigger as $$
+BEGIN
+	insert into stocks_history(id_stock, ask_min, ask_max, bid_min, bid_max)
+	values (new.id, new.ask_min, new.ask_max, new.bid_min, new.bid_max);
+	return new;
+END;
+$$ language plpgsql;
+
+create trigger history_trigger
+after update on stocks
+for each row 
+execute procedure save_history();
 
 insert into stocks(market_cap, stock_symbol, stock_name) values (random()*(1000000-250000)+250000, 'BEEF', 'MINERVA');
 insert into stocks(market_cap, stock_symbol, stock_name) values (random()*(1000000-250000)+250000, 'EMBR', 'EMBRAER');
