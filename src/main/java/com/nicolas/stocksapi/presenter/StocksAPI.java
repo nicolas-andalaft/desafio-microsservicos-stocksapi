@@ -10,6 +10,7 @@ import com.nicolas.stocksapi.domain.entities.BidAskEntity;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
 import com.nicolas.stocksapi.domain.usecases.GetRandomStocksUsecase;
+import com.nicolas.stocksapi.domain.usecases.GetStockHistoryUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStockUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStocksListUsecase;
 import com.nicolas.stocksapi.domain.usecases.UpdateBidAskUsecase;
@@ -37,6 +38,7 @@ class StocksAPI {
 	private GetStockUsecase getStockUsecase;
 	private GetRandomStocksUsecase getRandomStocksUsecase;
 	private UpdateBidAskUsecase updateBidAskUsecase;
+	private GetStockHistoryUsecase getStockHistoryUsecase;
 
 	private NoParams noParams;
 	
@@ -49,6 +51,7 @@ class StocksAPI {
 		getStockUsecase = new GetStockUsecase(stocksRepository);
 		getRandomStocksUsecase = new GetRandomStocksUsecase(stocksRepository);
 		updateBidAskUsecase = new UpdateBidAskUsecase(stocksRepository);
+		getStockHistoryUsecase = new GetStockHistoryUsecase(stocksRepository);
 
 		noParams = new NoParams();
 	}
@@ -56,6 +59,7 @@ class StocksAPI {
 	private final String getStocksList = "/stocks/{id}";
 	private final String getRandomStocks = "/stocks/random/{qty}";
 	private final String updateBidAsk = "/stocks/{id}/update/{type}/{value}";
+	private final String getStockHistory = "/stocks/{id}/history";
 	
 	@GetMapping("/")
 	public String root() { return "StocksAPI"; }
@@ -128,6 +132,25 @@ class StocksAPI {
 		}
 
 		var	result = updateBidAskUsecase.call(bidAsk);
+
+		if (result.isLeft()) 
+			return returnServerError(result);
+		else
+			return returnOk(result);
+	}
+
+	@GetMapping(getStockHistory)
+	public ResponseEntity<?> getStockHistory(@PathVariable String id) {
+		var stock = new StockEntity();
+		
+		try {
+			stock.id = Long.valueOf(id);
+		}
+		catch (Exception e) {
+			return returnBadRequest(Either.left("Parameter in wrong format"));
+		}
+
+		var	result = getStockHistoryUsecase.call(stock);
 
 		if (result.isLeft()) 
 			return returnServerError(result);

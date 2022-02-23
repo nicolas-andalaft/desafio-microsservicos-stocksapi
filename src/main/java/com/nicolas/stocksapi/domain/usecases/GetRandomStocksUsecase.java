@@ -19,6 +19,6 @@ public class GetRandomStocksUsecase implements IUsecase<Integer, List<StockEntit
     public Either<Exception, List<StockEntity>> call(Integer qty) {
         int stocksQty = qty != null ? qty : 1;
 
-        return repository.getRandomStocks(stocksQty).map((list) -> list.asJava());
+        return repository.getRandomStocks(stocksQty);
     }
 }

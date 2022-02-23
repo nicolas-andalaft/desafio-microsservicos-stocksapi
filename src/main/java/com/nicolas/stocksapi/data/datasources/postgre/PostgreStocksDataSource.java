@@ -67,4 +67,22 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 			return StockModel.fromMap(list.get(0));
 		});
 	}
+
+	@Override
+	public Either<Exception, List<StockEntity>> getStockHistory(StockEntity stock) {
+		String sqlString = String.format("""
+		select 
+		Stock.id, Stock.stock_name, Stock.stock_symbol, 
+		History.ask_min, History.ask_max, History.bid_min, History.bid_max, History.created_on
+		from %s Stock
+		inner join %s_history History on
+		Stock.id = History.id_stock
+		where History.id_stock = %s
+		order by created_on""", 
+		tableName, tableName, stock.id);
+
+		return super.execute(sqlString).map((list) -> {
+			return list.map((e) -> StockModel.fromMap(e));
+		});
+	}
 }

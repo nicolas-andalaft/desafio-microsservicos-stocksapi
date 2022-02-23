@@ -12,13 +12,13 @@ create table stocks(
 );
 
 create table stocks_history(
+    id bigserial primary key,
     id_stock bigint references stocks(id),
     ask_min numeric,
     ask_max numeric,
     bid_min numeric,
     bid_max numeric,
-    created_on timestamp not null default current_timestamp,
-    primary key (id_stock)
+    created_on timestamp not null default current_timestamp
 );
 
 create or replace function set_updated_on()

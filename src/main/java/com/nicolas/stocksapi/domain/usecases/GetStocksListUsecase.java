@@ -18,6 +18,6 @@ public class GetStocksListUsecase implements IUsecase<NoParams, List<StockEntity
 
     @Override
     public Either<Exception, List<StockEntity>> call(NoParams params) {
-        return stocksRepository.getStocksList().map((list) -> list.asJava());
+        return stocksRepository.getStocksList();
     }
 }
