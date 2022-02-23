@@ -1,8 +1,8 @@
 package com.nicolas.stocksapi.data.datasources.postgre;
 
+import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.data.datasources.IStocksDatasource;
 import com.nicolas.stocksapi.data.models.StockModel;
-import com.nicolas.stocksapi.domain.entities.BidAskEntity;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 
 import io.vavr.collection.List;
@@ -43,27 +43,31 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 	}
 
 	@Override
-	public Either<Exception, StockEntity> updateBidAsk(BidAskEntity bidAsk) {
+	public Either<Exception, StockEntity> checkNewBidAsk(BidAskHelper bidAsk) {
 		var type = bidAsk.type == 0 ? "ask" : "bid";
 		String sqlString = String.format("""
-		update %1$s 
-		set %2$s_min = 
-			case 
-				when %3$s < %2$s_min then %3$s
-				when %2$s_min is null then %3$s
-				else %2$s_min 
-			end, 
+		UPDATE %1$s 
+		SET %2$s_min = 
+			CASE 
+				WHEN %2$s_min > %3$s THEN %3$s
+				WHEN %2$s_min IS NULL THEN %3$s
+				ELSE %2$s_min 
+			END,
 			%2$s_max = 
-			case 
-				when %3$s > %2$s_max then %3$s
-				when %2$s_max is null then %3$s
-				else %2$s_max 
-			end 
-		where id = %4$s 
-		returning *""", 
+			CASE 
+				WHEN %2$s_max < %3$s THEN %3$s
+				WHEN %2$s_max IS NULL THEN %3$s
+				ELSE %2$s_max 
+			END
+		WHERE 
+			id = %4$s AND
+			(%2$s_min <> %3$s OR %2$s_min IS NULL OR
+			%2$s_max <> %3$s OR %2$s_max IS NULL)
+		RETURNING *""", 
 		tableName, type, bidAsk.value.toString(), bidAsk.id_stock.toString());
 
 		return super.execute(sqlString).map((list) -> {
+			if (list == null || list.length() == 0) return null;
 			return StockModel.fromMap(list.get(0));
 		});
 	}
@@ -71,14 +75,14 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 	@Override
 	public Either<Exception, List<StockEntity>> getStockHistory(StockEntity stock) {
 		String sqlString = String.format("""
-		select 
+		SELECT 
 		Stock.id, Stock.stock_name, Stock.stock_symbol, 
 		History.ask_min, History.ask_max, History.bid_min, History.bid_max, History.created_on
-		from %s Stock
-		inner join %s_history History on
+		FROM %s Stock
+		INNER JOIN %s_history History ON
 		Stock.id = History.id_stock
-		where History.id_stock = %s
-		order by created_on""", 
+		WHERE History.id_stock = %s
+		ORDER BY created_on""", 
 		tableName, tableName, stock.id);
 
 		return super.execute(sqlString).map((list) -> {

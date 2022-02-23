@@ -1,11 +1,11 @@
-package com.nicolas.stocksapi.domain.entities;
+package com.nicolas.stocksapi.core;
 
 import java.math.BigDecimal;
 
-public class BidAskEntity {
+public class BidAskHelper {
     public Long id_stock;
     public BigDecimal value;
     public Integer type;
 
-    public BidAskEntity() {}
+    public BidAskHelper() {}
 }

@@ -2,13 +2,14 @@ package com.nicolas.stocksapi.presenter;
 
 import java.math.BigDecimal;
 
+import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.core.NoParams;
 import com.nicolas.stocksapi.data.datasources.IStocksDatasource;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksDataSource;
 import com.nicolas.stocksapi.data.repositories.StocksRepository;
-import com.nicolas.stocksapi.domain.entities.BidAskEntity;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
+import com.nicolas.stocksapi.domain.usecases.GenerateRandomStockHistoryUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetRandomStocksUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStockHistoryUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStockUsecase;
@@ -39,6 +40,7 @@ class StocksAPI {
 	private GetRandomStocksUsecase getRandomStocksUsecase;
 	private UpdateBidAskUsecase updateBidAskUsecase;
 	private GetStockHistoryUsecase getStockHistoryUsecase;
+	private GenerateRandomStockHistoryUsecase generateRandomStockHistoryUsecase;
 
 	private NoParams noParams;
 	
@@ -52,6 +54,7 @@ class StocksAPI {
 		getRandomStocksUsecase = new GetRandomStocksUsecase(stocksRepository);
 		updateBidAskUsecase = new UpdateBidAskUsecase(stocksRepository);
 		getStockHistoryUsecase = new GetStockHistoryUsecase(stocksRepository);
+		generateRandomStockHistoryUsecase = new GenerateRandomStockHistoryUsecase(stocksRepository);
 
 		noParams = new NoParams();
 	}
@@ -60,6 +63,7 @@ class StocksAPI {
 	private final String getRandomStocks = "/stocks/random/{qty}";
 	private final String updateBidAsk = "/stocks/{id}/update/{type}/{value}";
 	private final String getStockHistory = "/stocks/{id}/history";
+	private final String generateRandomStockHistory = "/__generate_stock_history__";
 	
 	@GetMapping("/")
 	public String root() { return "StocksAPI"; }
@@ -115,7 +119,7 @@ class StocksAPI {
 
 	@GetMapping(updateBidAsk)
 	public ResponseEntity<?> updateBidAsk(@PathVariable String id, @PathVariable String type, @PathVariable String value) {
-		var bidAsk = new BidAskEntity();
+		var bidAsk = new BidAskHelper();
 		
 		try {
 			bidAsk.id_stock = Long.valueOf(id);
@@ -151,6 +155,16 @@ class StocksAPI {
 		}
 
 		var	result = getStockHistoryUsecase.call(stock);
+
+		if (result.isLeft()) 
+			return returnServerError(result);
+		else
+			return returnOk(result);
+	}
+
+	@GetMapping(generateRandomStockHistory)
+	public ResponseEntity<?> generateRandomStockHistory() {
+		var result = generateRandomStockHistoryUsecase.call(noParams);
 
 		if (result.isLeft()) 
 			return returnServerError(result);

@@ -2,9 +2,9 @@ package com.nicolas.stocksapi.data.repositories;
 
 import java.util.List;
 
+import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.data.datasources.IStocksDatasource;
 import com.nicolas.stocksapi.data.models.StockModel;
-import com.nicolas.stocksapi.domain.entities.BidAskEntity;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
 
@@ -37,8 +37,8 @@ public class StocksRepository implements IStocksRepository {
 	}
 	
 	@Override
-	public Either<Exception, StockEntity> updateBidAsk(BidAskEntity bidAsk) {
-		return datasource.updateBidAsk(bidAsk);
+	public Either<Exception, StockEntity> checkNewBidAsk(BidAskHelper bidAsk) {
+		return datasource.checkNewBidAsk(bidAsk);
 	}
 
 	@Override
