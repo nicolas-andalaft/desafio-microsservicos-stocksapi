@@ -17,6 +17,20 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>stomp-websocket</artifactId>
+			<version>2.3.4</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+			<version>2.6.3</version>
+		</dependency>
+
 		
 		<dependency>
 			<groupId>io.vavr</groupId>

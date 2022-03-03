@@ -5,7 +5,11 @@ import java.math.BigDecimal;
 import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.core.NoParams;
 import com.nicolas.stocksapi.data.datasources.IStocksDatasource;
+import com.nicolas.stocksapi.data.datasources.IStocksListener;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksDataSource;
+import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksListener;
+import com.nicolas.stocksapi.data.datasources.websocket.IStocksWebsocket;
+import com.nicolas.stocksapi.data.datasources.websocket.StocksWebsocketImplementation;
 import com.nicolas.stocksapi.data.repositories.StocksRepository;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
@@ -34,6 +38,12 @@ class StocksAPI {
 	// Repository interfaces
 	private IStocksRepository stocksRepository;
 
+	// Websockets interfaces
+	private IStocksWebsocket stocksWebsocket;
+
+	// Listener interfaces
+	private IStocksListener stocksListener;
+
 	// Usecases
 	private GetStocksListUsecase getStocksListUsecase;
 	private GetStockUsecase getStockUsecase;
@@ -49,6 +59,10 @@ class StocksAPI {
 
 		stocksRepository = new StocksRepository(stocksDatasource);
 
+		stocksWebsocket = new StocksWebsocketImplementation();
+
+		stocksListener = new PostgreStocksListener(stocksWebsocket);
+		
 		getStocksListUsecase = new GetStocksListUsecase(stocksRepository);
 		getStockUsecase = new GetStockUsecase(stocksRepository);
 		getRandomStocksUsecase = new GetRandomStocksUsecase(stocksRepository);
@@ -57,6 +71,8 @@ class StocksAPI {
 		generateRandomStockHistoryUsecase = new GenerateRandomStockHistoryUsecase(stocksRepository);
 
 		noParams = new NoParams();
+
+		stocksListener.listenToNotifications();
 	}
 
 	private final String getStocksList = "/stocks/{id}";
