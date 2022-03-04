@@ -42,6 +42,11 @@ public class StocksRepository implements IStocksRepository {
 	}
 
 	@Override
+	public Either<Exception, StockEntity> updateStockValues(StockEntity stock) {
+		return datasource.updateStockValues(stock);
+	}
+
+	@Override
 	public Either<Exception, List<StockEntity>> getStockHistory(StockEntity stock) {
 		return datasource.getStockHistory(stock).map((list) -> {
 			return list.asJava();

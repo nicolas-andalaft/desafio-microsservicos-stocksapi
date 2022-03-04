@@ -27,15 +27,15 @@ public class StockModel extends StockEntity {
   public static StockModel fromMap(Map<String, Object> map) {
     StockModel stock = new StockModel();
 
-    stock.id = MapGetter.parse(map, "id", Long.class);
-    stock.stock_symbol = MapGetter.parse(map, "stock_symbol", String.class);
-    stock.stock_name = MapGetter.parse(map, "stock_name", String.class);
-    stock.ask_min = MapGetter.parse(map, "ask_min", BigDecimal.class);
-    stock.ask_max = MapGetter.parse(map, "ask_max", BigDecimal.class);
-    stock.bid_min = MapGetter.parse(map, "bid_min", BigDecimal.class);
-    stock.bid_max = MapGetter.parse(map, "bid_max", BigDecimal.class);
-    stock.created_on = MapGetter.parse(map, "created_on", Timestamp.class);
-    stock.updated_on = MapGetter.parse(map, "updated_on", Timestamp.class);
+    stock.id = MapGetter.getLong(map, "id");
+    stock.stock_symbol = MapGetter.getString(map, "stock_symbol");
+    stock.stock_name = MapGetter.getString(map, "stock_name");
+    stock.ask_min = MapGetter.getBigDecimal(map, "ask_min");
+    stock.ask_max = MapGetter.getBigDecimal(map, "ask_max");
+    stock.bid_min = MapGetter.getBigDecimal(map, "bid_min");
+    stock.bid_max = MapGetter.getBigDecimal(map, "bid_max");
+    stock.created_on = MapGetter.getTimestamp(map, "created_on");
+    stock.updated_on = MapGetter.getTimestamp(map, "updated_on");
     
     return stock;
   }   

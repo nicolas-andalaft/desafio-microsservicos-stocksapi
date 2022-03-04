@@ -13,5 +13,6 @@ public interface IStocksRepository {
     public Either<Exception, StockEntity> getStock(StockEntity stock);
     public Either<Exception, List<StockEntity>> getRandomStocks(int qty);
     public Either<Exception, StockEntity> checkNewBidAsk(BidAskHelper bidAsk);
+    public Either<Exception, StockEntity> updateStockValues(StockEntity stock);
     public Either<Exception, List<StockEntity>> getStockHistory(StockEntity stock);
 }

@@ -73,6 +73,21 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 	}
 
 	@Override
+	public Either<Exception, StockEntity> updateStockValues(StockEntity stock) {
+		String sqlString = String.format("""
+		UPDATE %s 
+		SET bid_min = %s, bid_max = %s, ask_min = %s, ask_max = %s
+		WHERE id = %s
+		RETURNING *""", 
+		tableName, stock.bid_min, stock.bid_max, stock.ask_min, stock.ask_max, stock.id);
+
+		return super.execute(sqlString).map((list) -> {
+			if (list == null || list.length() == 0) return null;
+			return StockModel.fromMap(list.get(0));
+		});
+	}
+
+	@Override
 	public Either<Exception, List<StockEntity>> getStockHistory(StockEntity stock) {
 		String sqlString = String.format("""
 		SELECT 

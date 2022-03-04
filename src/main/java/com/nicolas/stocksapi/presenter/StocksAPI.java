@@ -1,6 +1,7 @@
 package com.nicolas.stocksapi.presenter;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.core.NoParams;
@@ -10,6 +11,7 @@ import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksDataSource;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksListener;
 import com.nicolas.stocksapi.data.datasources.websocket.IStocksWebsocket;
 import com.nicolas.stocksapi.data.datasources.websocket.StocksWebsocketImplementation;
+import com.nicolas.stocksapi.data.models.StockModel;
 import com.nicolas.stocksapi.data.repositories.StocksRepository;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
@@ -18,13 +20,16 @@ import com.nicolas.stocksapi.domain.usecases.GetRandomStocksUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStockHistoryUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStockUsecase;
 import com.nicolas.stocksapi.domain.usecases.GetStocksListUsecase;
-import com.nicolas.stocksapi.domain.usecases.UpdateBidAskUsecase;
+import com.nicolas.stocksapi.domain.usecases.UpdateStockValuesUsecase;
+import com.nicolas.stocksapi.domain.usecases.CheckBidAskUsecase;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.vavr.control.Either;
@@ -48,7 +53,8 @@ class StocksAPI {
 	private GetStocksListUsecase getStocksListUsecase;
 	private GetStockUsecase getStockUsecase;
 	private GetRandomStocksUsecase getRandomStocksUsecase;
-	private UpdateBidAskUsecase updateBidAskUsecase;
+	private CheckBidAskUsecase checkBidAskUsecase;
+	private UpdateStockValuesUsecase updateStockValuesUsecase;
 	private GetStockHistoryUsecase getStockHistoryUsecase;
 	private GenerateRandomStockHistoryUsecase generateRandomStockHistoryUsecase;
 
@@ -66,7 +72,8 @@ class StocksAPI {
 		getStocksListUsecase = new GetStocksListUsecase(stocksRepository);
 		getStockUsecase = new GetStockUsecase(stocksRepository);
 		getRandomStocksUsecase = new GetRandomStocksUsecase(stocksRepository);
-		updateBidAskUsecase = new UpdateBidAskUsecase(stocksRepository);
+		checkBidAskUsecase = new CheckBidAskUsecase(stocksRepository);
+		updateStockValuesUsecase = new UpdateStockValuesUsecase(stocksRepository);
 		getStockHistoryUsecase = new GetStockHistoryUsecase(stocksRepository);
 		generateRandomStockHistoryUsecase = new GenerateRandomStockHistoryUsecase(stocksRepository);
 
@@ -77,7 +84,8 @@ class StocksAPI {
 
 	private final String getStocksList = "/stocks/{id}";
 	private final String getRandomStocks = "/stocks/random/{qty}";
-	private final String updateBidAsk = "/stocks/{id}/update/{type}/{value}";
+	private final String checkBidAsk = "/stocks/{id}/check/{type}/{value}";
+	private final String updateBidAsk = "/stocks/{id}/update";
 	private final String getStockHistory = "/stocks/{id}/history";
 	private final String generateRandomStockHistory = "/__generate_stock_history__";
 	
@@ -133,8 +141,8 @@ class StocksAPI {
 			return returnOk(result);
 	}
 
-	@GetMapping(updateBidAsk)
-	public ResponseEntity<?> updateBidAsk(@PathVariable String id, @PathVariable String type, @PathVariable String value) {
+	@GetMapping(checkBidAsk)
+	public ResponseEntity<?> checkBidAsk(@PathVariable String id, @PathVariable String type, @PathVariable String value) {
 		var bidAsk = new BidAskHelper();
 		
 		try {
@@ -151,11 +159,24 @@ class StocksAPI {
 			return returnBadRequest(Either.left("Parameter in wrong format"));
 		}
 
-		var	result = updateBidAskUsecase.call(bidAsk);
+		var	result = checkBidAskUsecase.call(bidAsk);
 
 		if (result.isLeft()) 
 			return returnServerError(result);
 		else
+			return returnOk(result);
+	}
+
+	@PostMapping(updateBidAsk)
+	public ResponseEntity<?> updateBidAsk(@RequestBody Map<String, Object> body) {
+		
+		var stock = StockModel.fromMap(body);
+		
+		var result = updateStockValuesUsecase.call(stock);
+
+		if (result.isLeft())
+			return returnServerError(result);
+		else 
 			return returnOk(result);
 	}
 
