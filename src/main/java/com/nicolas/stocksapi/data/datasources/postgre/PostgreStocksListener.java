@@ -1,6 +1,9 @@
 package com.nicolas.stocksapi.data.datasources.postgre;
 
-import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -13,6 +16,7 @@ import org.postgresql.PGNotification;
 import io.vavr.control.Either;
 
 public class PostgreStocksListener extends PostgreDatasource implements IStocksListener {
+    private Logger logger;
     private ListenerThread listener;
     private IStocksWebsocket stocksWebsocket;
     
@@ -22,6 +26,8 @@ public class PostgreStocksListener extends PostgreDatasource implements IStocksL
         DataSource datasource = super.dataSource();
         listener = new ListenerThread(datasource);
         this.stocksWebsocket = stocksWebsocket;
+
+        logger = Logger.getLogger("Logger");
     }
 
     @Override
@@ -31,7 +37,7 @@ public class PostgreStocksListener extends PostgreDatasource implements IStocksL
 
     @Override
     public void onNotification(String payload) {
-        stocksWebsocket.notifySockets();
+        stocksWebsocket.notifyClients();
     }  
 
     private class ListenerThread extends Thread {
@@ -42,15 +48,16 @@ public class PostgreStocksListener extends PostgreDatasource implements IStocksL
             this.dataSource = datasource;
         }
 
+        @Override
         public void run() {
             var getPgconn = openConnection();
                 if (getPgconn.isLeft()) {
-                    System.out.println("COULD NOT LISTEN TO STOCKS");
+                    logger.log(Level.WARNING, "COULD NOT LISTEN TO STOCKS");
                     return;
                 }
 
             PGConnection pgconn = getPgconn.get();
-            PGNotification notifications[]; 
+            PGNotification[] notifications; 
 
             try {
                 while (true) {
@@ -59,37 +66,36 @@ public class PostgreStocksListener extends PostgreDatasource implements IStocksL
                     if (notifications != null) {
                         for (PGNotification notification : notifications)
                             onNotification(notification.getParameter());
-
-                        notifications = null;
                     }
 
                     Thread.sleep(refreshRate);
                 }
             }
-            catch (SQLException e) {
-                e.printStackTrace();
-            }
             catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                logger.log(Level.WARNING, "LISTEN THREAD INTERRUPTED");
+            }
+            catch (Exception e) {
+                logger.log(Level.WARNING, e.getMessage());
             }
         }
 
         private Either<Exception, PGConnection> openConnection() {
+            Connection conn = null;
+            Statement statement = null;
+
             try {
-                var conn = dataSource.getConnection();
-                var statement = conn.createStatement();
-                statement.execute("LISTEN stocks");
-                statement.close();
+                conn = dataSource.getConnection(); 
+                statement = conn.createStatement();
+                statement.execute("LISTEN stocks_update");
 
                 var pgconn = conn.unwrap(PGConnection.class);
                 return Either.right(pgconn);
             }
             catch (Exception e) {
-                e.printStackTrace();
+                logger.log(Level.WARNING, e.getMessage());
                 return Either.left(e);
             }
         }
     }
-
-      
 }

@@ -49,6 +49,19 @@ after update on stocks
 for each row 
 execute procedure save_history();
 
+create or replace function stocks_notify() 
+returns trigger as $$
+BEGIN
+  perform pg_notify('stocks_update', 'update');
+  return new;
+END;
+$$ language plpgsql;
+
+create trigger stocks_notify_trigger
+after update on stocks
+for each row 
+execute procedure stocks_notify();
+
 insert into stocks(market_cap, stock_symbol, stock_name) values (random()*(1000000-250000)+250000, 'BEEF', 'MINERVA');
 insert into stocks(market_cap, stock_symbol, stock_name) values (random()*(1000000-250000)+250000, 'EMBR', 'EMBRAER');
 insert into stocks(market_cap, stock_symbol, stock_name) values (random()*(1000000-250000)+250000, 'DESK', 'DESKTOP');
