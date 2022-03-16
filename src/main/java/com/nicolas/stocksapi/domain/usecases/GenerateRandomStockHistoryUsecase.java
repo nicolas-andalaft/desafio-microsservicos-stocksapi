@@ -5,14 +5,15 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.validation.constraints.Null;
+
 import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.core.IUsecase;
-import com.nicolas.stocksapi.core.NoParams;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
 
 import io.vavr.control.Either;
 
-public class GenerateRandomStockHistoryUsecase implements IUsecase<NoParams, NoParams>{
+public class GenerateRandomStockHistoryUsecase implements IUsecase<Null, Null>{
     private IStocksRepository repository;
     
     public GenerateRandomStockHistoryUsecase(IStocksRepository stocksRepository) {
@@ -24,7 +25,7 @@ public class GenerateRandomStockHistoryUsecase implements IUsecase<NoParams, NoP
     private Random random;
 
     @Override
-    public Either<Exception, NoParams> call(NoParams params) {
+    public Either<Exception, Null> call(Null params) {
         var stocks = repository.getStocksList();
         if (stocks.isLeft())
             return Either.left(stocks.getLeft());
@@ -37,17 +38,17 @@ public class GenerateRandomStockHistoryUsecase implements IUsecase<NoParams, NoP
         logger.log(Level.INFO, "RANDOM STOCKS GENERATION STARTED");
         
         for(int i = 0; i < stocksList.size(); i++) {
-            bidAsk.id_stock = stocksList.get(i).getId();
+            bidAsk.setIdStock(stocksList.get(i).getId());
             
-            bidAsk.type = 0;
+            bidAsk.setType(0);
             for(int j = 0; j < 5; j++) {
-                bidAsk.value = BigDecimal.valueOf(random.nextDouble(50));
+                bidAsk.setValue(BigDecimal.valueOf(random.nextDouble(50)));
                 repository.checkNewBidAsk(bidAsk);
             }
             
-            bidAsk.type = 1;
+            bidAsk.setType(1);
             for(int j = 0; j < 5; j++) {
-                bidAsk.value = BigDecimal.valueOf(random.nextDouble(50));
+                bidAsk.setValue(BigDecimal.valueOf(random.nextDouble(50)));
                 repository.checkNewBidAsk(bidAsk);
             }
         }

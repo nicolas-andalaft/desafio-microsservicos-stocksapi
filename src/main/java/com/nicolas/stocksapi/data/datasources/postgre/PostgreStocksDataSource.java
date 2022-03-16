@@ -18,9 +18,7 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
     public Either<Exception, List<StockEntity>> getStocksList() {
         var sqlString = String.format("SELECT * FROM %S ORDER BY id", tableName);
 
-		return super.execute(sqlString).map(list -> {
-			return list.map(StockModel::fromMap);
-		});
+		return super.execute(sqlString).map(list -> list.map(StockModel::fromMap));
     }
 
 	@Override
@@ -37,14 +35,12 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 	public Either<Exception, List<StockEntity>> getRandomStocks(int qty) {
 		var sqlString = String.format("SELECT * FROM %s ORDER BY RANDOM() LIMIT %s", tableName, qty);
 
-		return super.execute(sqlString).map(list -> {
-			return list.map(StockModel::fromMap);
-		});
+		return super.execute(sqlString).map(list -> list.map(StockModel::fromMap));
 	}
 
 	@Override
 	public Either<Exception, StockEntity> checkNewBidAsk(BidAskHelper bidAsk) {
-		var type = bidAsk.type == 0 ? "ask" : "bid";
+		var type = bidAsk.getType() == 0 ? "ask" : "bid";
 
 		String sqlString = String.format("""
 		UPDATE %1$s 
@@ -65,7 +61,7 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 		  (%2$s_min <> %3$s OR %2$s_min IS NULL OR
 		  %2$s_max <> %3$s OR %2$s_max IS NULL)
 		RETURNING *""", 
-		tableName, type, bidAsk.value.toString(), bidAsk.id_stock.toString());
+		tableName, type, bidAsk.getValue(), bidAsk.getIdStock());
 
 		return super.execute(sqlString).map(list -> {
 			if (list == null || list.length() == 0) return null;
@@ -82,7 +78,7 @@ public class PostgreStocksDataSource extends PostgreDatasource implements IStock
 		RETURNING *""", 
 		tableName, stock.getBidMin(), stock.getBidMax(), stock.getAskMin(), stock.getAskMax(), stock.getId());
 
-		return super.execute(sqlString).map((list) -> {
+		return super.execute(sqlString).map(list -> {
 			if (list == null || list.length() == 0) return null;
 			return StockModel.fromMap(list.get(0));
 		});

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.nicolas.stocksapi.core.BidAskHelper;
 import com.nicolas.stocksapi.core.IModel;
-import com.nicolas.stocksapi.core.NoParams;
 import com.nicolas.stocksapi.data.datasources.*;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksDataSource;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksListener;
@@ -55,8 +54,6 @@ class StocksAPI {
 	private UpdateStockValuesUsecase updateStockValuesUsecase;
 	private GetStockHistoryUsecase getStockHistoryUsecase;
 	private GenerateRandomStockHistoryUsecase generateRandomStockHistoryUsecase;
-
-	private NoParams noParams;
 	
 	public StocksAPI() {
 		// Datasources
@@ -81,8 +78,6 @@ class StocksAPI {
 		getStockHistoryUsecase = new GetStockHistoryUsecase(stocksRepository);
 		generateRandomStockHistoryUsecase = new GenerateRandomStockHistoryUsecase(stocksRepository);
 
-		noParams = new NoParams();
-
 		stocksListener.listenToNotifications();
 	}
 
@@ -105,7 +100,7 @@ class StocksAPI {
 
 	@GetMapping(GET_STOCKS_LIST)
 	public ResponseEntity<Object> getStocksList() {
-		var result = getStocksListUsecase.call(noParams);
+		var result = getStocksListUsecase.call(null);
 
 		return returnList(result, stockModel);
 	}
@@ -145,14 +140,14 @@ class StocksAPI {
 		var bidAsk = new BidAskHelper();
 		
 		try {
-			bidAsk.id_stock = Long.valueOf(id);
+			bidAsk.setIdStock(Long.valueOf(id));
 
-			bidAsk.type = Integer.parseInt(type);
+			bidAsk.setType(Integer.parseInt(type));
 
 			var bidAskValue = Double.parseDouble(value);
-			bidAsk.value = BigDecimal.valueOf(bidAskValue);
+			bidAsk.setValue(BigDecimal.valueOf(bidAskValue));
 
-			if (bidAsk.type != 0 && bidAsk.type != 1) throw new IllegalArgumentException();
+			if (bidAsk.getType() != 0 && bidAsk.getType() != 1) throw new IllegalArgumentException();
 		}
 		catch (Exception e) {
 			return returnBadRequest(Either.left(WRONG_PARAMETER_MESSAGE));
@@ -191,7 +186,7 @@ class StocksAPI {
 
 	@GetMapping(GENERATE_RANDOM_STOCK_HISTORY)
 	public ResponseEntity<Object> generateRandomStockHistory() {
-		var result = generateRandomStockHistoryUsecase.call(noParams);
+		var result = generateRandomStockHistoryUsecase.call(null);
 
 		return returnObject(result);
 	}
