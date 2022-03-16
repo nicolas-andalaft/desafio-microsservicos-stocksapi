@@ -31,7 +31,7 @@ public class StocksWebsocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/stocks/listen").setAllowedOrigins("http://localhost:8080").withSockJS();
+        registry.addEndpoint("/stocks/listen").setAllowedOriginPatterns("*").withSockJS();
     }
 
     @Override
