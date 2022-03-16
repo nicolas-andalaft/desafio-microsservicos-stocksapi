@@ -1,27 +1,23 @@
 package com.nicolas.stocksapi.presenter;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import com.nicolas.stocksapi.core.BidAskHelper;
+import com.nicolas.stocksapi.core.IModel;
 import com.nicolas.stocksapi.core.NoParams;
-import com.nicolas.stocksapi.data.datasources.IStocksDatasource;
-import com.nicolas.stocksapi.data.datasources.IStocksListener;
+import com.nicolas.stocksapi.data.datasources.*;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksDataSource;
 import com.nicolas.stocksapi.data.datasources.postgre.PostgreStocksListener;
 import com.nicolas.stocksapi.data.datasources.websocket.IStocksWebsocket;
-import com.nicolas.stocksapi.data.datasources.websocket.StocksWebsocketImplementation;
+import com.nicolas.stocksapi.data.datasources.websocket.StocksWebsocketConfig;
+import com.nicolas.stocksapi.data.datasources.websocket.StocksWebsocket;
 import com.nicolas.stocksapi.data.models.StockModel;
 import com.nicolas.stocksapi.data.repositories.StocksRepository;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 import com.nicolas.stocksapi.domain.repositories.IStocksRepository;
-import com.nicolas.stocksapi.domain.usecases.GenerateRandomStockHistoryUsecase;
-import com.nicolas.stocksapi.domain.usecases.GetRandomStocksUsecase;
-import com.nicolas.stocksapi.domain.usecases.GetStockHistoryUsecase;
-import com.nicolas.stocksapi.domain.usecases.GetStockUsecase;
-import com.nicolas.stocksapi.domain.usecases.GetStocksListUsecase;
-import com.nicolas.stocksapi.domain.usecases.UpdateStockValuesUsecase;
-import com.nicolas.stocksapi.domain.usecases.CheckBidAskUsecase;
+import com.nicolas.stocksapi.domain.usecases.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,13 +33,15 @@ import io.vavr.control.Either;
 @RestController
 @CrossOrigin
 class StocksAPI {
+
 	// Datasource interfaces
 	private IStocksDatasource stocksDatasource;
 
 	// Repository interfaces
 	private IStocksRepository stocksRepository;
 
-	// Websockets interfaces
+	// Websocket objects
+	private StocksWebsocketConfig stocksWebsocketConfig;
 	private IStocksWebsocket stocksWebsocket;
 
 	// Listener interfaces
@@ -61,14 +59,20 @@ class StocksAPI {
 	private NoParams noParams;
 	
 	public StocksAPI() {
+		// Datasources
 		stocksDatasource = new PostgreStocksDataSource();
-
+		
+		// Repositories
 		stocksRepository = new StocksRepository(stocksDatasource);
-
-		stocksWebsocket = new StocksWebsocketImplementation();
-
+		
+		// Websockets
+		stocksWebsocketConfig = new StocksWebsocketConfig();
+		stocksWebsocket = new StocksWebsocket(stocksWebsocketConfig);
+		
+		// Listeners
 		stocksListener = new PostgreStocksListener(stocksWebsocket);
 		
+		// Usecases
 		getStocksListUsecase = new GetStocksListUsecase(stocksRepository);
 		getStockUsecase = new GetStockUsecase(stocksRepository);
 		getRandomStocksUsecase = new GetRandomStocksUsecase(stocksRepository);
@@ -82,67 +86,62 @@ class StocksAPI {
 		stocksListener.listenToNotifications();
 	}
 
-	private final String getStocksList = "/stocks/{id}";
-	private final String getRandomStocks = "/stocks/random/{qty}";
-	private final String checkBidAsk = "/stocks/{id}/check/{type}/{value}";
-	private final String updateBidAsk = "/stocks/{id}/update";
-	private final String getStockHistory = "/stocks/{id}/history";
-	private final String generateRandomStockHistory = "/__generate_stock_history__";
+	private static final String WRONG_PARAMETER_MESSAGE = "Parameter in wrong format";
+	private static final StockModel stockModel = new StockModel();
+
+	private static final String GET_STOCKS_LIST = "/stocks";
+	private static final String GET_STOCK_BY_ID = "/stocks/{id}";
+	private static final String GET_RANDOM_STOCKS = "/stocks/random/{qty}";
+	private static final String CHECK_BID_ASK = "/stocks/{id}/check/{type}/{value}";
+	private static final String UPDATE_BID_ASK = "/stocks/{id}/update";
+	private static final String GET_STOCK_HISTORY = "/stocks/{id}/history";
+	private static final String GENERATE_RANDOM_STOCK_HISTORY = "/__generate_stock_history__";
 	
 	@GetMapping("/")
 	public String root() { return "StocksAPI"; }
 
 	@GetMapping("/error")
 	public String error() { return "Endpoint doesn't exist"; }
-	
-	@GetMapping("/stocks")
-	public ResponseEntity<?> getStocksList() {
+
+	@GetMapping(GET_STOCKS_LIST)
+	public ResponseEntity<Object> getStocksList() {
 		var result = getStocksListUsecase.call(noParams);
 
-		if (result.isLeft()) 
-			return returnServerError(result);
-		else
-			return returnOk(result);
+		return returnList(result, stockModel);
 	}
 
-	@GetMapping(getStocksList)
-	public ResponseEntity<?> getStockById(@PathVariable String id) {		
-		Long id_stock;
+	@GetMapping(GET_STOCK_BY_ID)
+	public ResponseEntity<Object> getStockById(@PathVariable String id) {		
+		Long idStock;
 		try {
-			id_stock = Long.parseLong(id);
+			idStock = Long.parseLong(id);
 		} catch (Exception e) {
-			return returnBadRequest(Either.left("Parameter in wrong format"));
+			return returnBadRequest(Either.left(WRONG_PARAMETER_MESSAGE));
 		}
 
 		var stock = new StockEntity();
-		stock.id = id_stock;
+		stock.setId(idStock);
 		var result = getStockUsecase.call(stock);
 
-		if (result.isLeft()) 
-			return returnServerError(result);
-		else
-			return returnOk(result);
+		return returnEntity(result, stockModel);
 	}
 
-	@GetMapping(getRandomStocks)
-	public ResponseEntity<?> getRandomStocks(@PathVariable String qty) {		
+	@GetMapping(GET_RANDOM_STOCKS)
+	public ResponseEntity<Object> getRandomStocks(@PathVariable String qty) {		
 		int stocksQty;
 		try {
 			stocksQty = Integer.parseInt(qty);
 		} catch (Exception e) {
-			return returnBadRequest(Either.left("Parameter in wrong format"));
+			return returnBadRequest(Either.left(WRONG_PARAMETER_MESSAGE));
 		}
 
 		var result = getRandomStocksUsecase.call(stocksQty);
 
-		if (result.isLeft()) 
-			return returnServerError(result);
-		else
-			return returnOk(result);
+		return returnList(result, stockModel);
 	}
 
-	@GetMapping(checkBidAsk)
-	public ResponseEntity<?> checkBidAsk(@PathVariable String id, @PathVariable String type, @PathVariable String value) {
+	@GetMapping(CHECK_BID_ASK)
+	public ResponseEntity<Object> checkBidAsk(@PathVariable String id, @PathVariable String type, @PathVariable String value) {
 		var bidAsk = new BidAskHelper();
 		
 		try {
@@ -153,71 +152,79 @@ class StocksAPI {
 			var bidAskValue = Double.parseDouble(value);
 			bidAsk.value = BigDecimal.valueOf(bidAskValue);
 
-			if (bidAsk.type != 0 && bidAsk.type != 1) throw new Exception();
+			if (bidAsk.type != 0 && bidAsk.type != 1) throw new IllegalArgumentException();
 		}
 		catch (Exception e) {
-			return returnBadRequest(Either.left("Parameter in wrong format"));
+			return returnBadRequest(Either.left(WRONG_PARAMETER_MESSAGE));
 		}
 
 		var	result = checkBidAskUsecase.call(bidAsk);
 
-		if (result.isLeft()) 
-			return returnServerError(result);
-		else
-			return returnOk(result);
+		return returnEntity(result, stockModel);
 	}
 
-	@PostMapping(updateBidAsk)
-	public ResponseEntity<?> updateBidAsk(@RequestBody Map<String, Object> body) {
+	@PostMapping(UPDATE_BID_ASK)
+	public ResponseEntity<Object> updateBidAsk(@RequestBody Map<String, Object> body) {
 		
 		var stock = StockModel.fromMap(body);
 		
 		var result = updateStockValuesUsecase.call(stock);
 
-		if (result.isLeft())
-			return returnServerError(result);
-		else 
-			return returnOk(result);
+		return returnEntity(result, stockModel);
 	}
 
-	@GetMapping(getStockHistory)
-	public ResponseEntity<?> getStockHistory(@PathVariable String id) {
+	@GetMapping(GET_STOCK_HISTORY)
+	public ResponseEntity<Object> getStockHistory(@PathVariable String id) {
 		var stock = new StockEntity();
 		
 		try {
-			stock.id = Long.valueOf(id);
+			stock.setId(Long.valueOf(id));
 		}
 		catch (Exception e) {
-			return returnBadRequest(Either.left("Parameter in wrong format"));
+			return returnBadRequest(Either.left(WRONG_PARAMETER_MESSAGE));
 		}
 
 		var	result = getStockHistoryUsecase.call(stock);
 
-		if (result.isLeft()) 
-			return returnServerError(result);
-		else
-			return returnOk(result);
+		return returnList(result, stockModel);
 	}
 
-	@GetMapping(generateRandomStockHistory)
-	public ResponseEntity<?> generateRandomStockHistory() {
+	@GetMapping(GENERATE_RANDOM_STOCK_HISTORY)
+	public ResponseEntity<Object> generateRandomStockHistory() {
 		var result = generateRandomStockHistoryUsecase.call(noParams);
 
-		if (result.isLeft()) 
-			return returnServerError(result);
-		else
-			return returnOk(result);
+		return returnObject(result);
 	}
 
-	private ResponseEntity<?> returnServerError(Either<?,?> result) {
+	private ResponseEntity<Object> returnObject(Either<Exception, ?> result) {
+		if (result.isLeft())
+			return returnServerError(result);
+
+		return ResponseEntity.ok(result.get());
+	}
+
+	private <A> ResponseEntity<Object> returnEntity(Either<Exception, A> result, IModel<A> model) {
+		if (result.isLeft())
+			return returnServerError(result);
+
+		return ResponseEntity.ok(model.toMap(result.get()));
+	}
+
+	private <A> ResponseEntity<Object> returnList(Either<Exception, List<A>> result, IModel<A> model) {
+		if (result.isLeft())
+			return returnServerError(result);
+
+		var body = result.get().stream().map(model::toMap);
+		return ResponseEntity.ok(body);
+	}
+	
+	private ResponseEntity<Object> returnServerError(Either<?,?> result) {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result.getLeft());
 	}
 
-	private ResponseEntity<?> returnBadRequest(Either<?,?> result) {
+	private ResponseEntity<Object> returnBadRequest(Either<?,?> result) {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.getLeft());
 	}
 
-	private ResponseEntity<?> returnOk(Either<?,?> result) {
-		return ResponseEntity.status(HttpStatus.OK).body(result.get());
-	}
+	
 }

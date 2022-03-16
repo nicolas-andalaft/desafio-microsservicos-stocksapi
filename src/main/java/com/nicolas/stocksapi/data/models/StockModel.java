@@ -1,58 +1,64 @@
 package com.nicolas.stocksapi.data.models;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.Map;
+
+import com.nicolas.stocksapi.core.IModel;
 import com.nicolas.stocksapi.data.utils.MapGetter;
 import com.nicolas.stocksapi.domain.entities.StockEntity;
 
 import io.vavr.collection.HashMap;
 
-public class StockModel extends StockEntity {
+public class StockModel extends StockEntity implements IModel<StockEntity> {
 
   public StockModel() {}
 
   public StockModel(StockEntity stock) {
-    this.id = stock.id;
-    this.stock_symbol = stock.stock_symbol;
-    this.stock_name = stock.stock_name;
-    this.ask_min = stock.ask_min;
-    this.ask_max = stock.ask_max;
-    this.bid_min = stock.bid_min;
-    this.bid_max = stock.bid_max;
-    this.created_on = stock.created_on;
-    this.updated_on = stock.updated_on;
-  }
+    this.id = stock.getId();
+    this.stockSymbol = stock.getStockSymbol();
+    this.stockName = stock.getStockName();
+    this.askMin = stock.getAskMin();
+    this.askMax = stock.getAskMax();
+    this.bidMin = stock.getBidMin();
+    this.bidMax = stock.getBidMax();
+    this.createdOn = stock.getCreatedOn();
+    this.updatedOn = stock.getUpdatedOn();
+  } 
 
   public static StockModel fromMap(Map<String, Object> map) {
     StockModel stock = new StockModel();
 
     stock.id = MapGetter.getLong(map, "id");
-    stock.stock_symbol = MapGetter.getString(map, "stock_symbol");
-    stock.stock_name = MapGetter.getString(map, "stock_name");
-    stock.ask_min = MapGetter.getBigDecimal(map, "ask_min");
-    stock.ask_max = MapGetter.getBigDecimal(map, "ask_max");
-    stock.bid_min = MapGetter.getBigDecimal(map, "bid_min");
-    stock.bid_max = MapGetter.getBigDecimal(map, "bid_max");
-    stock.created_on = MapGetter.getTimestamp(map, "created_on");
-    stock.updated_on = MapGetter.getTimestamp(map, "updated_on");
+    stock.stockSymbol = MapGetter.getString(map, "stock_symbol");
+    stock.stockName = MapGetter.getString(map, "stock_name");
+    stock.askMin = MapGetter.getBigDecimal(map, "ask_min");
+    stock.askMax = MapGetter.getBigDecimal(map, "ask_max");
+    stock.bidMin = MapGetter.getBigDecimal(map, "bid_min");
+    stock.bidMax = MapGetter.getBigDecimal(map, "bid_max");
+    stock.createdOn = MapGetter.getTimestamp(map, "created_on");
+    stock.updatedOn = MapGetter.getTimestamp(map, "updated_on");
     
     return stock;
-  }   
-      
-  public static Map<String, Object> toMap(StockEntity stock) {
-    HashMap<String, Object> map = HashMap.of(
-      "id",stock.id,
-      "stock_symbol",stock.stock_symbol,
-      "stock_name",stock.stock_name,
-      "ask_min",stock.ask_min,
-      "ask_max",stock.ask_max,
-      "bid_min",stock.bid_min,
-      "bid_max",stock.bid_max,
-      "created_on",stock.created_on,
-      "updated_on",stock.updated_on
-    );
+  }
 
+  @Override
+  public Map<String, Object> toMap() {
+    return toMap(this);    
+  }
+
+  @Override
+  public Map<String, Object> toMap(StockEntity stock) {
+    HashMap<String, Object> map = HashMap.of(
+      "id", stock.getId(),
+      "stock_symbol", stock.getStockSymbol(),
+      "stock_name", stock.getStockName(),
+      "ask_min", stock.getAskMin(),
+      "ask_max", stock.getAskMax(),
+      "bid_min", stock.getBidMin(),
+      "bid_max", stock.getBidMax(),
+      "created_on", stock.getCreatedOn(),
+      "updated_on", stock.getUpdatedOn()
+    );
+    
     return map.toJavaMap();
   }
 }

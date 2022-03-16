@@ -4,15 +4,33 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class StockEntity {
-    public Long id;
-    public String stock_symbol;
-    public String stock_name;
-    public BigDecimal ask_min;
-    public BigDecimal ask_max;
-    public BigDecimal bid_min;
-    public BigDecimal bid_max;
-    public Timestamp created_on;
-    public Timestamp updated_on;
+    protected Long id;
+    protected String stockSymbol;
+    protected String stockName;
+    protected BigDecimal askMin;
+    protected BigDecimal askMax;
+    protected BigDecimal bidMin;
+    protected BigDecimal bidMax;
+    protected Timestamp createdOn;
+    protected Timestamp updatedOn;
 
-    public StockEntity() {}
+    public void setId(Long id) { this.id = id; }
+    public void setStockSymbol(String stockSymbol) { this.stockSymbol = stockSymbol; }
+    public void setStockName(String stockName) { this.stockName = stockName; }
+    public void setAskMin(BigDecimal askMin) { this.askMin = askMin; }
+    public void setAskMax(BigDecimal askMax) { this.askMax = askMax; }
+    public void setBidMin(BigDecimal bidMin) { this.bidMin = bidMin; }
+    public void setBidMax(BigDecimal bidMax) { this.bidMax = bidMax; }
+    public void setCreatedOn(Timestamp createdOn) { this.createdOn = createdOn; }
+    public void setUpdatedOn(Timestamp updatedOn) { this.updatedOn = updatedOn; }
+
+    public Long getId() { return this.id; }
+    public String getStockSymbol() { return this.stockSymbol; }
+    public String getStockName() { return this.stockName; }
+    public BigDecimal getAskMin() { return this.askMin; }
+    public BigDecimal getAskMax() { return this.askMax; }
+    public BigDecimal getBidMin() { return this.bidMin; }
+    public BigDecimal getBidMax() { return this.bidMax; }
+    public Timestamp getCreatedOn() { return this.createdOn; }
+    public Timestamp getUpdatedOn() { return this.updatedOn; }
 }
