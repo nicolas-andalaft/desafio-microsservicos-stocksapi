@@ -1,3 +1,3 @@
 # desafio-microsservicos-stocksapi
 
-Stock API
+Stocks API
