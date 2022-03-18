@@ -1,6 +1,7 @@
 package com.nicolas.stocksapi.domain.usecases;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +20,7 @@ public class GenerateRandomStockHistoryUsecase implements IUsecase<Null, Null>{
     public GenerateRandomStockHistoryUsecase(IStocksRepository stocksRepository) {
         repository = stocksRepository;
 
-        this.random = new Random();
+        this.random = new SecureRandom();
     }
 
     private Random random;

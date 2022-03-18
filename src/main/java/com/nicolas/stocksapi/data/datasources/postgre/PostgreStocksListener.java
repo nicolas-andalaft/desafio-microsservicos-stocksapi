@@ -1,7 +1,5 @@
 package com.nicolas.stocksapi.data.datasources.postgre;
 
-import java.sql.Connection;
-import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,8 +10,6 @@ import com.nicolas.stocksapi.data.datasources.websocket.IStocksWebsocket;
 
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
-
-import io.vavr.control.Either;
 
 public class PostgreStocksListener extends PostgreDatasource implements IStocksListener {
     private Logger logger;
@@ -50,13 +46,24 @@ public class PostgreStocksListener extends PostgreDatasource implements IStocksL
 
         @Override
         public void run() {
-            var getPgconn = openConnection();
-                if (getPgconn.isLeft()) {
-                    logger.log(Level.WARNING, "COULD NOT LISTEN TO STOCKS");
-                    return;
-                }
+            PGConnection pgconn = null;
 
-            PGConnection pgconn = getPgconn.get();
+            // Get connection
+            try(var conn = dataSource.getConnection(); var statement = conn.createStatement();) {
+                
+                statement.execute("LISTEN stocks_update");
+
+                pgconn = conn.unwrap(PGConnection.class);
+            }
+            catch (Exception e) {
+                logger.log(Level.WARNING, e.getMessage());
+            }
+
+            if (pgconn != null)
+                listen(pgconn);            
+        }
+
+        private void listen(PGConnection pgconn) {
             PGNotification[] notifications; 
 
             try {
@@ -77,24 +84,6 @@ public class PostgreStocksListener extends PostgreDatasource implements IStocksL
             }
             catch (Exception e) {
                 logger.log(Level.WARNING, e.getMessage());
-            }
-        }
-
-        private Either<Exception, PGConnection> openConnection() {
-            Connection conn = null;
-            Statement statement = null;
-
-            try {
-                conn = dataSource.getConnection(); 
-                statement = conn.createStatement();
-                statement.execute("LISTEN stocks_update");
-
-                var pgconn = conn.unwrap(PGConnection.class);
-                return Either.right(pgconn);
-            }
-            catch (Exception e) {
-                logger.log(Level.WARNING, e.getMessage());
-                return Either.left(e);
             }
         }
     }
