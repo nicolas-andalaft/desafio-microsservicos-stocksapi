@@ -17,6 +17,7 @@
 		<java.version>17</java.version>
 		<sonar.organization>nicolas-andalaft</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    	<maven.test.skip>true</maven.test.skip>
 	</properties>
 	<dependencies>
 
